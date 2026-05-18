@@ -1,49 +1,27 @@
-// netlify/functions/claude-proxy.mjs
+// netlify/functions/claude-proxy.js
 // Anthropic API'ye güvenli proxy — API key server-side'da kalır
- 
-export async function handler(event) {
-  // CORS preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-      },
-      body: ''
-    };
-  }
- 
+
+exports.handler = async (event) => {
   // Sadece POST kabul et
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
- 
+
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) {
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'API key yapılandırılmamış. Netlify Environment Variables bölümünden ANTHROPIC_API_KEY ekleyin.' })
     };
   }
- 
+
   try {
     const { prompt, max_tokens } = JSON.parse(event.body);
- 
+
     if (!prompt || typeof prompt !== 'string') {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Geçersiz prompt' })
-      };
+      return { statusCode: 400, body: JSON.stringify({ error: 'Geçersiz prompt' }) };
     }
- 
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -57,23 +35,24 @@ export async function handler(event) {
         messages: [{ role: 'user', content: prompt }]
       })
     });
- 
+
     if (!response.ok) {
       const errText = await response.text();
       console.error('Anthropic API error:', response.status, errText);
       return {
         statusCode: response.status,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: 'API hatası: ' + response.status, details: errText })
+        body: JSON.stringify({ error: `API hatası: ${response.status}`, details: errText })
       };
     }
- 
+
     const data = await response.json();
+
+    // Text content'i çıkar
     const text = (data.content || [])
       .filter(block => block.type === 'text')
       .map(block => block.text)
       .join('\n');
- 
+
     return {
       statusCode: 200,
       headers: {
@@ -86,9 +65,7 @@ export async function handler(event) {
     console.error('Function error:', err);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: err.message || 'Sunucu hatası' })
     };
   }
-}
- 
+};
