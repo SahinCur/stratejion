@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STRATEJION — Strateji Danışmanlık Platformu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" data-presets="env,react" src="diagrams.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="methodology.jsx"></script>
+<style>
+  :root {
+    --navy: #1a1a2e;
+    --navy-2: #25253d;
+    --teal: #2A9D8F;
+    --teal-dark: #1f7a70;
+    --bg: #FAFBFC;
+    --bg-2: #F2F4F7;
+    --ink: #1a1a2e;
+    --ink-soft: #4a4a63;
+    --muted: #8a8aa0;
+    --line: #e6e8ee;
+    --line-2: #d8dbe3;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1.1;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  textarea { font-family: inherit; }
+
+  /* Canvas particle network */
+  #particles {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+  #root { position: relative; z-index: 1; }
+
+  /* Fade up animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fadeUp { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  @keyframes barRise {
+    0% { transform: scaleY(0); }
+    45% { transform: scaleY(1); }
+    85% { transform: scaleY(1); }
+    100% { transform: scaleY(0); }
+  }
+  @keyframes dotFade {
+    0%, 35% { opacity: 0; transform: scale(0.4); }
+    50%, 80% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.4); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div id="root"></div>
+
+<script>
+/* Particle / network background */
+(function() {
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let W, H, dots;
+  const N = 48;
+
+  function resize() {
+    W = canvas.width = window.innerWidth * window.devicePixelRatio;
+    H = canvas.height = window.innerHeight * window.devicePixelRatio;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+  }
+  function init() {
+    resize();
+    dots = Array.from({length: N}, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.25 * window.devicePixelRatio,
+      vy: (Math.random() - 0.5) * 0.25 * window.devicePixelRatio,
+      r: (Math.random() * 1.2 + 0.6) * window.devicePixelRatio
+    }));
+  }
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+    for (const d of dots) {
+      d.x += d.vx; d.y += d.vy;
+      if (d.x < 0 || d.x > W) d.vx *= -1;
+      if (d.y < 0 || d.y > H) d.vy *= -1;
+    }
+    const maxDist = 160 * window.devicePixelRatio;
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const dx = dots[i].x - dots[j].x;
+        const dy = dots[i].y - dots[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxDist) {
+          const a = (1 - dist / maxDist) * 0.18;
+          ctx.strokeStyle = 'rgba(42, 157, 143, ' + a + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(dots[i].x, dots[i].y);
+          ctx.lineTo(dots[j].x, dots[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    for (const d of dots) {
+      ctx.fillStyle = 'rgba(26, 26, 46, 0.45)';
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  window.addEventListener('resize', init);
+  init();
+  tick();
+})();
+</script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useRef, useMemo } = React;
+
+/* =========================================================
+   LOGO — The Monolith Node
+   3 vertical rounded bars (short → medium → long) + dot on top of tallest
+   ========================================================= */
+function MonolithMark({ size = 28, color = '#2A9D8F', dotColor }) {
+  // viewBox tuned so bars sit on a baseline at y=28
+  const dot = dotColor || color;
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
+      {/* bar 1 — short */}
+      <rect x="3"  y="18" width="5" height="10" rx="2" fill={color} />
+      {/* bar 2 — medium */}
+      <rect x="11" y="12" width="5" height="16" rx="2" fill={color} />
+      {/* bar 3 — long */}
+      <rect x="19" y="6"  width="5" height="22" rx="2" fill={color} />
+      {/* dot atop bar 3 */}
+      <circle cx="21.5" cy="3" r="2.2" fill={dot} />
+    </svg>
+  );
+}
+
+function Logo({ size = 22, color = '#1a1a2e', accent = '#2A9D8F' }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+      <MonolithMark size={size + 8} color={accent} />
+      <span style={{
+        fontFamily: "'DM Sans', sans-serif",
+        fontWeight: 300,
+        letterSpacing: '0.28em',
+        fontSize: size * 0.72,
+        color,
+        textTransform: 'uppercase',
+        paddingTop: 2
+      }}>STRATEJION</span>
+    </div>
+  );
+}
+
+/* =========================================================
+   FRAMEWORKS
+   ========================================================= */
+const FRAMEWORKS = [
+  { id: 'bcg',     glyph: '◐', name: 'BCG Matrisi',         desc: 'Portföy analizi & büyüme-pay pozisyonlama',  color: '#C0392B', extra: 'Stars, Cash Cows, Question Marks, Dogs olmak üzere 4 kadran için ayrı section üret. Her kadrana sektöre özel ürün/hizmet örnekleri yerleştir.' },
+  { id: '7s',      glyph: '⬡', name: 'McKinsey 7S',         desc: 'Organizasyonel uyum & dönüşüm modeli',        color: '#2C5F8D', extra: 'Strategy, Structure, Systems, Shared Values, Skills, Style, Staff için 7 ayrı section. Hard S ve Soft S ayrımını yap, elementler arası uyum/uyumsuzlukları belirle.' },
+  { id: 'house',   glyph: '⌂', name: 'Strateji Evi',        desc: 'Vizyon-misyon-değerler hiyerarşisi',          color: '#2A9D8F', extra: 'Çatı (Vizyon), Üst Kat (Misyon & Öncelikler), Orta Kat (Değerler), Zemin (Yetkinlikler & Kaynaklar), Temel (Operasyonel süreçler) katmanları için section üret.' },
+  { id: 'hoshin',  glyph: '◎', name: 'Hoshin Kanri',        desc: 'Strateji yayılımı & hedef kaskadlama',        color: '#D4A017', extra: 'Kuzey Yıldızı vizyonu, Yıllık breakthrough hedefler, Departman→Takım→Birey kaskadı, Catchball süreci, PDCA döngüsü için section üret.' },
+  { id: 'porter',  glyph: '⬠', name: 'Porter 5 Güç',         desc: 'Sektör rekabet yapısı analizi',                color: '#E07A1F', extra: '5 güç için ayrı section, her birine 1-5 şiddet puanı içeren keyPoints, genel sektör çekiciliği değerlendirmesi.' },
+  { id: 'swot',    glyph: '✦', name: 'SWOT Analizi',        desc: 'Güçlü-zayıf yönler, fırsat-tehditler',         color: '#1a1a2e', extra: 'Strengths, Weaknesses, Opportunities, Threats + TOWS matrisi (SO, WO, ST, WT çapraz stratejileri) section olarak.' },
+  { id: 'okr',     glyph: '◈', name: 'OKR Çerçevesi',        desc: 'Hedef ve anahtar sonuç yönetimi',              color: '#6A4C93', extra: '3-4 stratejik Objective, her biri 3-4 ölçülebilir Key Result, confidence level, çeyreklik review döngüsü.' },
+  { id: 'bsc',     glyph: '▣', name: 'Balanced Scorecard',  desc: '4 perspektif stratejik performans',           color: '#1E6091', extra: 'Finansal, Müşteri, İç Süreçler, Öğrenme & Gelişim perspektifleri. Her biri için hedef → ölçüt → hedef değer → inisiyatif zinciri.' },
+];
+
+const SECTORS = [
+  'Teknoloji & SaaS',
+  'Üretim & Sanayi',
+  'Perakende & E-Ticaret',
+  'Finans & Bankacılık',
+  'Sağlık & İlaç',
+  'Enerji & Sürdürülebilirlik',
+  'Eğitim & EdTech',
+  'Lojistik & Tedarik Zinciri',
+];
+
+const LOADING_MESSAGES = [
+  'Sektör dinamikleri analiz ediliyor…',
+  'Strateji çerçevesi uygulanıyor…',
+  'Rekabet yapısı değerlendiriliyor…',
+  'Aksiyon önerileri oluşturuluyor…',
+  'Stratejik çıktılar derleniyor…',
+];
+
+/* =========================================================
+   NAVBAR
+   ========================================================= */
+function Navbar({ onHome, onMethodology }) {
+  return (
+    <nav style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      backdropFilter: 'blur(14px)',
+      background: 'rgba(250, 251, 252, 0.82)',
+      borderBottom: '1px solid var(--line)',
+    }}>
+      <div style={{
+        maxWidth: 1320, margin: '0 auto',
+        padding: '20px 48px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+      }}>
+        <button onClick={onHome} style={{ background: 'none', border: 'none', padding: 0 }}>
+          <Logo size={20} />
+        </button>
+        <div style={{ display: 'flex', gap: 40, alignItems: 'center' }}>
+          {[
+            { label: 'Çerçeveler', onClick: onMethodology },
+            { label: 'Metodoloji', onClick: onMethodology },
+            { label: 'Yaklaşım', onClick: onMethodology },
+            { label: 'Kütüphane', onClick: onMethodology },
+          ].map(l => (
+            <button key={l.label} onClick={l.onClick} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--ink-soft)', textDecoration: 'none',
+              fontSize: 14, letterSpacing: '0.04em', fontWeight: 400,
+              fontFamily: 'inherit', padding: 0
+            }}>{l.label}</button>
+          ))}
+          <button onClick={onHome} style={{
+            background: 'var(--navy)', color: '#fff', border: 'none',
+            padding: '10px 22px', borderRadius: 2,
+            fontSize: 13, letterSpacing: '0.12em', fontWeight: 500,
+            textTransform: 'uppercase'
+          }}>Analize Başla</button>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+/* =========================================================
+   HERO / STEP 1
+   ========================================================= */
+function Hero({ onStart, onMethodology }) {
+  return (
+    <div className="fadeUp" style={{ maxWidth: 1200, margin: '0 auto', padding: '120px 48px 100px' }}>
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 10,
+        padding: '8px 16px',
+        border: '1px solid var(--line-2)',
+        borderRadius: 100,
+        fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase',
+        color: 'var(--ink-soft)', fontWeight: 500,
+        marginBottom: 36, background: 'rgba(255,255,255,0.6)'
+      }}>
+        <span style={{ width: 6, height: 6, background: 'var(--teal)', borderRadius: '50%' }}></span>
+        Strateji Danışmanlık Platformu
+      </div>
+
+      <h1 style={{
+        fontSize: 'clamp(48px, 6.4vw, 92px)',
+        fontWeight: 500,
+        lineHeight: 1.04,
+        maxWidth: 1100,
+        marginBottom: 36,
+        letterSpacing: '-0.02em'
+      }}>
+        Stratejik kararlarınızı<br />
+        <span style={{ fontStyle: 'italic', color: 'var(--teal-dark)' }}>çerçevelerle</span> şekillendirin.
+      </h1>
+
+      <p style={{
+        fontSize: 20, maxWidth: 720, color: 'var(--ink-soft)',
+        lineHeight: 1.6, marginBottom: 48, fontWeight: 400
+      }}>
+        Stratejion; sektörünüz, gündeminizdeki problem ve seçtiğiniz strateji çerçevesini birleştirerek
+        McKinsey, BCG ve Harvard Business Review metodolojilerinden beslenen yapılandırılmış
+        bir stratejik analiz üretir. Düşünme aracınız, danışman seviyesinde çıktı.
+      </p>
+
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 96 }}>
+        <button onClick={onStart} style={{
+          background: 'var(--navy)', color: '#fff', border: 'none',
+          padding: '20px 36px', borderRadius: 2,
+          fontSize: 14, letterSpacing: '0.18em', fontWeight: 500,
+          textTransform: 'uppercase',
+          display: 'inline-flex', alignItems: 'center', gap: 16
+        }}>
+          Analize Başla
+          <span style={{ fontSize: 18 }}>→</span>
+        </button>
+        <button onClick={onMethodology} style={{
+          background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line-2)',
+          padding: '20px 28px', borderRadius: 2,
+          fontSize: 14, letterSpacing: '0.18em', fontWeight: 500,
+          textTransform: 'uppercase', cursor: 'pointer'
+        }}>
+          Metodolojiyi İncele
+        </button>
+      </div>
+
+      <div>
+        <div style={{
+          fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase',
+          color: 'var(--muted)', marginBottom: 20, fontWeight: 500
+        }}>Sekiz Strateji Çerçevesi</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {FRAMEWORKS.map(f => (
+            <div key={f.id} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '10px 16px',
+              border: '1px solid var(--line-2)',
+              borderRadius: 100,
+              background: 'rgba(255,255,255,0.7)',
+              fontSize: 13, color: 'var(--ink)'
+            }}>
+              <span style={{ color: f.color, fontSize: 14 }}>{f.glyph}</span>
+              {f.name}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* split rule + meta */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 48, marginTop: 100, paddingTop: 64, borderTop: '1px solid var(--line)' }}>
+        {[
+          { k: '01', t: 'Bağlam', d: 'Sektörünüzü ve gündeminizdeki stratejik problemi tanımlayın.' },
+          { k: '02', t: 'Çerçeve', d: 'Soruna en uygun düşünme aracını sekiz kanıtlanmış çerçeveden seçin.' },
+          { k: '03', t: 'Çıktı', d: 'Bölümlere ayrılmış analiz, stratejik öneriler, KPI seti ve kaynaklar.' },
+        ].map(s => (
+          <div key={s.k}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: 'var(--teal-dark)', marginBottom: 12, letterSpacing: '0.1em' }}>{s.k} / 03</div>
+            <h3 style={{ fontSize: 24, marginBottom: 10 }}>{s.t}</h3>
+            <p style={{ fontSize: 15, color: 'var(--ink-soft)', margin: 0 }}>{s.d}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   STEP 2 — Parameters
+   ========================================================= */
+function ParamForm({ sector, setSector, topic, setTopic, framework, setFramework, onGenerate, onBack }) {
+  const canGo = sector && topic.trim().length > 5 && framework;
+  return (
+    <div className="fadeUp" style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 48px 100px' }}>
+      <button onClick={onBack} style={{
+        background: 'none', border: 'none', color: 'var(--ink-soft)',
+        fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
+        marginBottom: 40, padding: 0
+      }}>← Ana Sayfa</button>
+
+      <div style={{ marginBottom: 56, maxWidth: 800 }}>
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+          color: 'var(--teal-dark)', letterSpacing: '0.2em', marginBottom: 12
+        }}>BRIEF / 01</div>
+        <h1 style={{ fontSize: 56, lineHeight: 1.05, marginBottom: 16 }}>Analiz parametreleri</h1>
+        <p style={{ color: 'var(--ink-soft)', fontSize: 17, margin: 0 }}>
+          Üç temel girdiyle başlıyoruz: hangi sektörde çalıştığınız, hangi stratejik konuyu ele aldığınız
+          ve hangi düşünme aracını uygulamak istediğiniz.
+        </p>
+      </div>
+
+      {/* Sector */}
+      <Section step="01" title="Sektör" subtitle="Analizin uygulanacağı dikey">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+          {SECTORS.map(s => {
+            const active = sector === s;
+            return (
+              <button key={s} onClick={() => setSector(s)} style={{
+                padding: '20px 22px', textAlign: 'left',
+                background: active ? 'var(--navy)' : '#fff',
+                color: active ? '#fff' : 'var(--ink)',
+                border: '1px solid ' + (active ? 'var(--navy)' : 'var(--line-2)'),
+                borderRadius: 2, fontSize: 15, fontWeight: 400,
+                transition: 'all 0.18s',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <span>{s}</span>
+                {active && <span style={{ color: 'var(--teal)' }}>●</span>}
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* Topic */}
+      <Section step="02" title="Stratejik konu" subtitle="Üzerinde düşünmek istediğiniz problem">
+        <textarea
+          value={topic}
+          onChange={e => setTopic(e.target.value)}
+          placeholder="Örn: Dijital dönüşüm sürecinde organizasyonel yapılanma; ürün portföyünün yeniden konumlandırılması; yeni pazar girişi stratejisi..."
+          rows={5}
+          style={{
+            width: '100%', padding: '22px 24px',
+            background: '#fff', border: '1px solid var(--line-2)',
+            borderRadius: 2, fontSize: 16, color: 'var(--ink)',
+            outline: 'none', resize: 'vertical', lineHeight: 1.6
+          }}
+        />
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8, fontFamily: "'JetBrains Mono', monospace" }}>
+          {topic.length} karakter
+        </div>
+      </Section>
+
+      {/* Framework */}
+      <Section step="03" title="Çerçeve" subtitle="Uygulanacak stratejik düşünme aracı">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+          {FRAMEWORKS.map(f => {
+            const active = framework === f.id;
+            return (
+              <button key={f.id} onClick={() => setFramework(f.id)} style={{
+                padding: '24px 22px', textAlign: 'left',
+                background: '#fff',
+                border: '1px solid ' + (active ? f.color : 'var(--line-2)'),
+                borderRadius: 2, position: 'relative', overflow: 'hidden',
+                outline: active ? `1px solid ${f.color}` : 'none',
+                outlineOffset: -1
+              }}>
+                {/* color tab */}
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
+                  background: f.color
+                }}></div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 8, marginLeft: 6 }}>
+                  <span style={{ fontSize: 22, color: f.color, lineHeight: 1 }}>{f.glyph}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontFamily: "'Playfair Display', serif", fontSize: 19, fontWeight: 500,
+                      letterSpacing: '-0.005em', color: 'var(--ink)', marginBottom: 4
+                    }}>{f.name}</div>
+                    <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>{f.desc}</div>
+                  </div>
+                  {active && (
+                    <div style={{
+                      width: 18, height: 18, borderRadius: '50%', background: f.color,
+                      color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0
+                    }}>✓</div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <div style={{
+        marginTop: 64, paddingTop: 36, borderTop: '1px solid var(--line)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+      }}>
+        <div style={{ fontSize: 13, color: 'var(--muted)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}>
+          {[sector && 'sektör', topic.trim().length > 5 && 'konu', framework && 'çerçeve']
+            .filter(Boolean).length} / 3 parametre tamamlandı
+        </div>
+        <button
+          onClick={onGenerate}
+          disabled={!canGo}
+          style={{
+            background: canGo ? 'var(--teal)' : 'var(--line-2)',
+            color: canGo ? '#fff' : 'var(--muted)',
+            border: 'none',
+            padding: '22px 40px', borderRadius: 2,
+            fontSize: 14, letterSpacing: '0.18em', fontWeight: 500,
+            textTransform: 'uppercase',
+            cursor: canGo ? 'pointer' : 'not-allowed',
+            display: 'inline-flex', alignItems: 'center', gap: 16
+          }}>
+          Strateji Analizi Oluştur
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Section({ step, title, subtitle, children }) {
+  return (
+    <div style={{ marginBottom: 56 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--line)' }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: 'var(--teal-dark)', letterSpacing: '0.2em' }}>{step}</span>
+        <h2 style={{ fontSize: 26, fontWeight: 500, margin: 0 }}>{title}</h2>
+        <span style={{ color: 'var(--muted)', fontSize: 14 }}>{subtitle}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/* =========================================================
+   STEP 3 — Loading (Monolith Node animation)
+   ========================================================= */
+function LoadingScreen({ phase }) {
+  const [msgIdx, setMsgIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setMsgIdx(i => (i + 1) % LOADING_MESSAGES.length), 2800);
+    return () => clearInterval(t);
+  }, []);
+
+  // Phase-specific anchor message
+  const phaseNum = phase ? parseInt(phase.split('/')[0]) : 0;
+  const phaseTotal = phase ? parseInt(phase.split('/')[1]) : 0;
+  const phaseLabels = [
+    'Stratejik çerçeve uygulanıyor…',
+    'Analiz derinleştiriliyor…',
+    'Detaylar derleniyor…',
+    'Stratejik öneriler oluşturuluyor…',
+    'Son dokunuşlar yapılıyor…'
+  ];
+  const phaseMsg = phase ? (phaseLabels[phaseNum - 1] || phaseLabels[0]) : null;
+
+  const displayMsg = phaseMsg || LOADING_MESSAGES[msgIdx];
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: 'var(--bg)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      animation: 'fadeIn 0.6s both'
+    }}>
+      {/* The bars */}
+      <div style={{
+        width: 240, height: 220,
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        gap: 20, position: 'relative'
+      }}>
+        {/* Bar 1 - short (80px) */}
+        <div style={{
+          width: 36, height: 80, background: 'var(--teal)',
+          borderRadius: 4, transformOrigin: 'bottom',
+          animation: 'barRise 3.0s ease-in-out 0s infinite'
+        }}></div>
+        {/* Bar 2 - medium (140px) */}
+        <div style={{
+          width: 36, height: 140, background: 'var(--teal)',
+          borderRadius: 4, transformOrigin: 'bottom',
+          animation: 'barRise 3.0s ease-in-out 0.2s infinite'
+        }}></div>
+        {/* Bar 3 - long (200px) */}
+        <div style={{
+          width: 36, height: 200, background: 'var(--teal)',
+          borderRadius: 4, transformOrigin: 'bottom',
+          animation: 'barRise 3.0s ease-in-out 0.4s infinite',
+          position: 'relative'
+        }}>
+          {/* Dot */}
+          <div style={{
+            position: 'absolute', top: -28, left: '50%',
+            transform: 'translateX(-50%)',
+            width: 18, height: 18, borderRadius: '50%',
+            background: 'var(--teal)',
+            animation: 'dotFade 3.0s ease-in-out 0.4s infinite'
+          }}></div>
+        </div>
+      </div>
+
+      <div style={{
+        marginTop: 64, fontSize: 11, letterSpacing: '0.35em',
+        textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 500
+      }}>The Monolith Node</div>
+
+      <div style={{
+        marginTop: 18, height: 28,
+        fontSize: 17, color: 'var(--ink-soft)',
+        fontStyle: 'italic', fontFamily: "'Playfair Display', serif",
+        transition: 'opacity 0.4s'
+      }}>
+        <span key={displayMsg} style={{ animation: 'fadeUp 0.6s both' }}>
+          {displayMsg}
+        </span>
+      </div>
+
+      {phase && (
+        <div style={{ marginTop: 32, display: 'flex', gap: 8, alignItems: 'center' }}>
+          {Array.from({ length: phaseTotal }, (_, i) => (
+            <span key={i} style={{
+              width: 28, height: 3, borderRadius: 2,
+              background: i < phaseNum ? 'var(--teal)' : 'var(--line-2)',
+              transition: 'background 0.4s'
+            }}></span>
+          ))}
+          <span style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+            color: 'var(--muted)', letterSpacing: '0.15em', marginLeft: 6
+          }}>
+            {phase.replace('/', ' / ')}
+          </span>
+        </div>
+      )}
+
+      <div style={{
+        position: 'absolute', bottom: 48, left: '50%', transform: 'translateX(-50%)',
+        fontSize: 11, color: 'var(--muted)', letterSpacing: '0.3em', textTransform: 'uppercase'
+      }}>
+        Analiz hazırlanıyor · iki aşamalı derinleştirme
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   STEP 4 — Results
+   ========================================================= */
+function ResultsScreen({ data, framework, sector, topic, onRestart }) {
+  const sectionTitles = (data.sections || []).map(s => s.title).filter(Boolean);
+  const [expandedIdx, setExpandedIdx] = useState(0);
+
+  return (
+    <div className="fadeUp" style={{ maxWidth: 1280, margin: '0 auto', padding: '60px 48px 100px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 36 }}>
+        <button onClick={onRestart} style={{
+          background: 'none', border: 'none', color: 'var(--ink-soft)',
+          fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', padding: 0
+        }}>← Yeni Analiz</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--teal)' }}></span>
+          Analiz tamamlandı
+        </div>
+      </div>
+
+      {/* Header card */}
+      <div className="fadeUp" style={{
+        background: 'var(--navy)', color: '#fff',
+        padding: '56px 64px', borderRadius: 2,
+        position: 'relative', overflow: 'hidden', marginBottom: 56
+      }}>
+        <div style={{
+          position: 'absolute', right: -40, top: -40,
+          opacity: 0.08, fontSize: 320, lineHeight: 1,
+          color: framework.color
+        }}>{framework.glyph}</div>
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
+            <span style={{
+              padding: '6px 12px', background: framework.color, color: '#fff',
+              fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 500
+            }}>{framework.name}</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+              {sector}
+            </span>
+          </div>
+          <h1 style={{
+            fontSize: 52, lineHeight: 1.1, marginBottom: 28,
+            color: '#fff', maxWidth: 900
+          }}>
+            {data.frameworkTitle}
+          </h1>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 48, alignItems: 'start', marginTop: 36 }}>
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Konu</div>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>{topic}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Executive Summary</div>
+              <div style={{ fontSize: 18, lineHeight: 1.6, color: '#fff', fontFamily: "'Playfair Display', serif", fontStyle: 'italic' }}>
+                {data.executiveSummary}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Framework diagram */}
+      {window.FrameworkDiagram && (
+        <div className="fadeUp" style={{ marginBottom: 56 }}>
+          <SectionHeader step="01" title="Çerçeve Görünümü" />
+          <window.FrameworkDiagram
+            frameworkId={framework.id}
+            titles={sectionTitles}
+            color={framework.color}
+          />
+        </div>
+      )}
+
+      {/* Sections grid */}
+      <div style={{ marginBottom: 72 }}>
+        <SectionHeader step="02" title="Analiz Bölümleri" count={data.sections?.length || 0} />
+        <div style={{ display: 'grid', gap: 12 }}>
+          {(data.sections || []).map((s, i) => {
+            const open = expandedIdx === i;
+            return (
+              <div key={i}
+                className="fadeUp"
+                style={{
+                  background: '#fff', border: '1px solid var(--line-2)',
+                  borderLeft: '3px solid ' + framework.color,
+                  borderRadius: 2, transition: 'all 0.25s',
+                  animationDelay: (i * 80) + 'ms'
+                }}>
+                <button
+                  onClick={() => setExpandedIdx(open ? -1 : i)}
+                  style={{
+                    width: '100%', padding: '28px 32px',
+                    background: 'transparent', border: 'none',
+                    textAlign: 'left', display: 'flex', alignItems: 'center', gap: 24,
+                    justifyContent: 'space-between'
+                  }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 24, flex: 1 }}>
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                      color: 'var(--muted)', letterSpacing: '0.15em',
+                      minWidth: 50
+                    }}>{String(i + 1).padStart(2, '0')}</span>
+                    <h3 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>{s.title}</h3>
+                  </div>
+                  <span style={{
+                    fontSize: 22, color: framework.color,
+                    transform: open ? 'rotate(45deg)' : 'rotate(0)',
+                    transition: 'transform 0.3s', display: 'inline-block'
+                  }}>+</span>
+                </button>
+                {open && (
+                  <div style={{ padding: '0 32px 36px 106px', animation: 'fadeUp 0.4s both' }}>
+                    <p style={{ fontSize: 16, color: 'var(--ink-soft)', lineHeight: 1.7, marginTop: 0, marginBottom: 28 }}>
+                      {s.content}
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 36 }}>
+                      <div>
+                        <div style={{
+                          fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
+                          color: 'var(--muted)', marginBottom: 14, fontWeight: 500
+                        }}>Anahtar Noktalar</div>
+                        <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                          {(s.keyPoints || []).map((p, j) => (
+                            <li key={j} style={{
+                              padding: '10px 0', borderBottom: '1px solid var(--line)',
+                              fontSize: 14, color: 'var(--ink)', display: 'flex', gap: 14
+                            }}>
+                              <span style={{ color: framework.color, fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}>0{j+1}</span>
+                              <span style={{ flex: 1 }}>{p}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div style={{
+                          fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
+                          color: 'var(--muted)', marginBottom: 14, fontWeight: 500
+                        }}>Aksiyon Önerileri</div>
+                        <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                          {(s.actionItems || []).map((a, j) => (
+                            <li key={j} style={{
+                              padding: '12px 14px', background: 'var(--bg-2)',
+                              marginBottom: 8, fontSize: 14, color: 'var(--ink)',
+                              borderLeft: '2px solid ' + framework.color,
+                              display: 'flex', gap: 12, alignItems: 'flex-start'
+                            }}>
+                              <span style={{ color: framework.color }}>→</span>
+                              <span style={{ flex: 1 }}>{a}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recommendations + KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 36, marginBottom: 72 }}>
+        <div>
+          <SectionHeader step="03" title="Stratejik Öneriler" />
+          <div style={{ background: '#fff', border: '1px solid var(--line-2)', padding: 36, borderRadius: 2 }}>
+            <ol style={{ margin: 0, paddingLeft: 0, listStyle: 'none', counterReset: 'rec' }}>
+              {(data.strategicRecommendations || []).length === 0 ? (
+                <li style={{ padding: '18px 0', color: 'var(--muted)', fontStyle: 'italic' }}>
+                  Veri yüklenemedi.
+                </li>
+              ) : (data.strategicRecommendations || []).map((r, i) => (
+                <li key={i} style={{
+                  display: 'flex', gap: 20,
+                  padding: '18px 0',
+                  borderBottom: i < (data.strategicRecommendations || []).length - 1 ? '1px solid var(--line)' : 'none'
+                }}>
+                  <span style={{
+                    fontFamily: "'Playfair Display', serif", fontSize: 28,
+                    color: framework.color, fontWeight: 500, lineHeight: 1,
+                    minWidth: 40
+                  }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span style={{ fontSize: 16, lineHeight: 1.6, color: 'var(--ink)' }}>{r}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+        <div>
+          <SectionHeader step="04" title="Önerilen KPI'lar" />
+          <div style={{ background: 'var(--navy)', color: '#fff', padding: 36, borderRadius: 2, minHeight: 80 }}>
+            {(data.kpiSuggestions || []).length === 0 ? (
+              <div style={{ padding: '18px 0', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', fontSize: 14 }}>
+                KPI verileri oluşturulamadı.
+              </div>
+            ) : (data.kpiSuggestions || []).map((k, i) => (
+              <div key={i} style={{
+                padding: '14px 0',
+                borderBottom: i < (data.kpiSuggestions || []).length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                display: 'flex', gap: 16, alignItems: 'flex-start'
+              }}>
+                <span style={{
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                  color: 'var(--teal)', letterSpacing: '0.15em',
+                  paddingTop: 4, minWidth: 38
+                }}>KPI {String(i + 1).padStart(2, '0')}</span>
+                <span style={{ fontSize: 15, lineHeight: 1.55, color: 'rgba(255,255,255,0.92)' }}>{k}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sources */}
+      <div>
+        <SectionHeader step="05" title="Referanslar & Kaynaklar" />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {(data.sources || []).length === 0 ? (
+            <span style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>
+              Referans verileri oluşturulamadı.
+            </span>
+          ) : (data.sources || []).map((src, i) => (
+            <span key={i} style={{
+              padding: '10px 18px', background: '#fff',
+              border: '1px solid var(--line-2)', borderRadius: 2,
+              fontSize: 13, color: 'var(--ink-soft)',
+              fontFamily: "'JetBrains Mono', monospace"
+            }}>
+              {src}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ step, title, count }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'baseline', gap: 20,
+      marginBottom: 24, paddingBottom: 14, borderBottom: '1px solid var(--line)'
+    }}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: 'var(--teal-dark)', letterSpacing: '0.2em' }}>
+        {step}
+      </span>
+      <h2 style={{ fontSize: 28, fontWeight: 500, margin: 0 }}>{title}</h2>
+      {count != null && (
+        <span style={{ fontSize: 13, color: 'var(--muted)', fontFamily: "'JetBrains Mono', monospace" }}>
+          [{count}]
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+function Footer() {
+  return (
+    <footer style={{
+      borderTop: '1px solid var(--line)',
+      padding: '48px 48px',
+      background: 'rgba(255,255,255,0.5)'
+    }}>
+      <div style={{
+        maxWidth: 1320, margin: '0 auto',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 24
+      }}>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, letterSpacing: '0.32em', color: 'var(--ink-soft)', fontWeight: 300 }}>
+          STRATEJION © 2026
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '0.05em' }}>
+          McKinsey · BCG · HBR · Porter metodolojileri referans alınmaktadır
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* =========================================================
+   ERROR / FALLBACK
+   ========================================================= */
+function ErrorScreen({ onRetry, onBack, msg }) {
+  return (
+    <div className="fadeUp" style={{ maxWidth: 700, margin: '120px auto', padding: '0 48px', textAlign: 'center' }}>
+      <div style={{ fontSize: 64, marginBottom: 24, color: 'var(--teal-dark)' }}>◐</div>
+      <h2 style={{ fontSize: 36, marginBottom: 16 }}>Analiz tamamlanamadı</h2>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 16, marginBottom: 12 }}>
+        {msg || 'Strateji çıktısı işlenirken beklenmeyen bir durum oluştu.'}
+      </p>
+      <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 36, fontFamily: "'JetBrains Mono', monospace" }}>
+        Tekrar deneyin veya parametreleri düzenleyin.
+      </p>
+      <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+        <button onClick={onRetry} style={{
+          background: 'var(--teal)', color: '#fff', border: 'none',
+          padding: '16px 32px', borderRadius: 2,
+          fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 500
+        }}>Tekrar Dene</button>
+        <button onClick={onBack} style={{
+          background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line-2)',
+          padding: '16px 32px', borderRadius: 2,
+          fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 500
+        }}>Parametrelere Dön</button>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   PROMPT BUILDERS — Adaptive multi-phase system
+   Token limiti (1024) nedeniyle her çağrı küçük tutulur.
+   Çerçeveye göre 3-5 phase kullanılır.
+   ========================================================= */
+
+const SECTION_COUNTS = {
+  '7s': 7, porter: 5, hoshin: 5, house: 5,
+  bcg: 4, swot: 4, okr: 4, bsc: 4
+};
+
+function baseSysMsg(sector, topic, fw) {
+  return `Sen deneyimli bir strateji danışmanısın. McKinsey, BCG, Bain metodolojilerini ve HBR literatürünü biliyorsun.
+SEKTÖR: ${sector} | KONU: ${topic} | ÇERÇEVE: ${fw.name}
+ÇERÇEVE TALİMATI: ${fw.extra}
+KURAL: SADECE JSON döndür. Markdown, backtick, açıklama YAZMA. Metinler Türkçe olsun.`;
+}
+
+/* Phase 1A: Başlık, özet ve ilk N section */
+function buildPhase1A(sector, topic, fw, count) {
+  return `${baseSysMsg(sector, topic, fw)}
+
+GÖREV: Çerçevenin ilk ${count} bileşeni için analiz üret.
+
+JSON formatı:
+{"frameworkTitle":"${fw.name} — ${sector}","executiveSummary":"2-3 cümle özet","sections":[{"title":"Bölüm başlığı","content":"3-4 cümle sektöre özel analiz"}]}
+
+sections dizisinde TAM ${count} bölüm olsun. Her content en az 3 cümle.`;
+}
+
+/* Phase 1B: Kalan section'lar (sadece 5+ bölümlü çerçeveler için) */
+function buildPhase1B(sector, topic, fw, existingTitles, remainingCount) {
+  const list = existingTitles.map((t,i) => `${i+1}. ${t}`).join(', ');
+  return `${baseSysMsg(sector, topic, fw)}
+
+Zaten üretilen bölümler: ${list}
+
+GÖREV: Çerçevenin KALAN ${remainingCount} bileşeni için analiz üret. Yukarıdakileri TEKRARLAMA.
+
+JSON formatı:
+{"sections":[{"title":"Bölüm başlığı","content":"3-4 cümle sektöre özel analiz"}]}
+
+sections dizisinde TAM ${remainingCount} bölüm olsun.`;
+}
+
+/* Phase 2A: Her section için keyPoints + actionItems (max 4 section per call) */
+function buildPhase2A(sector, topic, fw, titles) {
+  const list = titles.map((t,i) => `${i+1}. ${t}`).join('\n');
+  return `${baseSysMsg(sector, topic, fw)}
+
+BÖLÜMLER:
+${list}
+
+GÖREV: Her bölüm için anahtar noktalar ve aksiyon önerileri üret.
+
+JSON formatı:
+{"sectionDetails":[{"title":"Bölüm başlığı AYNEN","keyPoints":["Nokta 1","Nokta 2","Nokta 3"],"actionItems":["Aksiyon 1","Aksiyon 2"]}]}
+
+sectionDetails dizisinde TAM ${titles.length} kayıt olsun. title alanları yukarıdakilerle BİREBİR aynı olsun.`;
+}
+
+/* Phase 3: Stratejik öneriler, KPI'lar ve kaynaklar */
+function buildPhase3(sector, topic, fw) {
+  return `${baseSysMsg(sector, topic, fw)}
+
+GÖREV: Bu çerçeve analizi için stratejik öneriler, KPI önerileri ve referans kaynakları üret.
+
+JSON formatı:
+{"strategicRecommendations":["Öneri 1","Öneri 2","Öneri 3","Öneri 4"],"kpiSuggestions":["KPI 1","KPI 2","KPI 3","KPI 4","KPI 5","KPI 6"],"sources":["Kaynak 1","Kaynak 2","Kaynak 3","Kaynak 4"]}
+
+KURALLAR:
+- strategicRecommendations: 4 somut, uygulanabilir öneri
+- kpiSuggestions: 6 ölçülebilir KPI, birimi belirt
+- sources: 4 referans (yazar/kurum/makale)`;
+}
+
+/* Auto-repair truncated JSON by closing dangling brackets/quotes.
+   Walks the string respecting strings/escapes; tracks { [ stack;
+   if it ends inside a string, closes the string; trims a trailing
+   comma; then appends matching closers in reverse order. */
+function fixJSON(raw) {
+  if (!raw) return raw;
+  let s = raw;
+  const stack = [];
+  let inStr = false;
+  let escape = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (inStr) {
+      if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}') { if (stack[stack.length - 1] === '{') stack.pop(); }
+    else if (ch === ']') { if (stack[stack.length - 1] === '[') stack.pop(); }
+  }
+  if (inStr) s += '"';
+  // Trim trailing comma/whitespace before closing brackets
+  s = s.replace(/,\s*$/g, '');
+  while (stack.length) {
+    const open = stack.pop();
+    // Drop a trailing comma before we close
+    s = s.replace(/,\s*$/g, '');
+    s += open === '{' ? '}' : ']';
+  }
+  return s;
+}
+
+/* =========================================================
+   API CALL — Netlify serverless function üzerinden Anthropic API
+   Claude.ai artifact ortamında window.claude.complete kullanır,
+   Netlify/standalone'da ise serverless proxy kullanır.
+   ========================================================= */
+async function callClaude(prompt) {
+  // Claude.ai artifact ortamında mıyız?
+  if (window.claude && typeof window.claude.complete === 'function') {
+    return await window.claude.complete(prompt);
+  }
+
+  // Netlify / standalone: serverless function proxy
+  const res = await fetch('/.netlify/functions/claude-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, max_tokens: 2048 })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Bilinmeyen hata' }));
+    throw new Error(err.error || `API hatası: ${res.status}`);
+  }
+
+  const data = await res.json();
+  if (!data.text) throw new Error('API yanıtı boş');
+  return data.text;
+}
+
+function extractJson(text) {
+  if (!text) throw new Error('Boş yanıt');
+  // strip fences
+  let t = text.trim();
+  t = t.replace(/^```(json|JSON)?\s*/i, '').replace(/```\s*$/i, '').trim();
+  // narrow to JSON object span
+  const first = t.indexOf('{');
+  const last = t.lastIndexOf('}');
+  if (first >= 0) {
+    t = last > first ? t.slice(first, last + 1) : t.slice(first);
+  }
+  // try direct
+  try { return JSON.parse(t); } catch (e) {}
+  // try with bracket auto-close
+  try { return JSON.parse(fixJSON(t)); } catch (e) {}
+  throw new Error('JSON parse edilemedi');
+}
+
+/* =========================================================
+   APP ROOT
+   ========================================================= */
+function App() {
+  const [step, setStep] = useState('hero'); // hero | params | loading | results | error
+  const [phase, setPhase] = useState(null); // phase1 | phase2 | null
+  const [sector, setSector] = useState('');
+  const [topic, setTopic] = useState('');
+  const [framework, setFramework] = useState('');
+  const [result, setResult] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const fwObj = useMemo(() => FRAMEWORKS.find(f => f.id === framework), [framework]);
+
+  const generate = async () => {
+    if (!sector || !topic.trim() || !fwObj) return;
+    setStep('loading');
+    setResult(null);
+    setErrorMsg('');
+
+    const totalSections = SECTION_COUNTS[fwObj.id] || 4;
+    const needsSplit = totalSections > 4;
+    const firstBatch = needsSplit ? 4 : totalSections;
+    const totalPhases = needsSplit ? 4 : 3;
+
+    try {
+      let allSections = [];
+      let frameworkTitle = '';
+      let executiveSummary = '';
+      let currentPhase = 0;
+
+      // ---- Phase 1A: İlk N section + başlık + özet ----
+      currentPhase++;
+      setPhase(`${currentPhase}/${totalPhases}`);
+      const text1a = await callClaude(buildPhase1A(sector, topic, fwObj, firstBatch));
+      const part1a = extractJson(text1a);
+      if (!part1a.sections || part1a.sections.length === 0) {
+        throw new Error('Birinci aşamada beklenen yapıda yanıt alınamadı.');
+      }
+      frameworkTitle = part1a.frameworkTitle || `${fwObj.name} — ${sector}`;
+      executiveSummary = part1a.executiveSummary || '';
+      allSections = [...part1a.sections];
+
+      // ---- Phase 1B (sadece 5+ bölümlü çerçeveler): Kalan section'lar ----
+      if (needsSplit) {
+        currentPhase++;
+        setPhase(`${currentPhase}/${totalPhases}`);
+        const existingTitles = allSections.map(s => s.title).filter(Boolean);
+        const remaining = totalSections - allSections.length;
+        if (remaining > 0) {
+          const text1b = await callClaude(buildPhase1B(sector, topic, fwObj, existingTitles, remaining));
+          const part1b = extractJson(text1b);
+          if (part1b.sections && Array.isArray(part1b.sections)) {
+            allSections = [...allSections, ...part1b.sections];
+          }
+        }
+      }
+
+      // ---- Phase 2A: Her section için keyPoints + actionItems ----
+      // Eğer çok fazla section varsa ikiye böl
+      currentPhase++;
+      setPhase(`${currentPhase}/${totalPhases}`);
+      const allTitles = allSections.map(s => s.title).filter(Boolean);
+      
+      let allDetails = [];
+      if (allTitles.length > 4) {
+        // İlk 4 section için detay
+        const text2a1 = await callClaude(buildPhase2A(sector, topic, fwObj, allTitles.slice(0, 4)));
+        const part2a1 = extractJson(text2a1);
+        if (part2a1.sectionDetails) allDetails = [...part2a1.sectionDetails];
+        
+        // Kalan section'lar için detay (aynı phase içinde)
+        const text2a2 = await callClaude(buildPhase2A(sector, topic, fwObj, allTitles.slice(4)));
+        const part2a2 = extractJson(text2a2);
+        if (part2a2.sectionDetails) allDetails = [...allDetails, ...part2a2.sectionDetails];
+      } else {
+        const text2a = await callClaude(buildPhase2A(sector, topic, fwObj, allTitles));
+        const part2a = extractJson(text2a);
+        if (part2a.sectionDetails) allDetails = part2a.sectionDetails;
+      }
+
+      // ---- Phase 3: Stratejik öneriler + KPI'lar + Kaynaklar ----
+      currentPhase++;
+      setPhase(`${currentPhase}/${totalPhases}`);
+      const text3 = await callClaude(buildPhase3(sector, topic, fwObj));
+      const part3 = extractJson(text3);
+
+      // ---- MERGE ----
+      const detailsByTitle = {};
+      allDetails.forEach(d => {
+        if (d && d.title) detailsByTitle[d.title.trim()] = d;
+      });
+
+      const mergedSections = allSections.map((s, i) => {
+        const byTitle = s.title ? detailsByTitle[s.title.trim()] : null;
+        const byIdx = allDetails[i];
+        const detail = byTitle || byIdx || {};
+        return {
+          title: s.title,
+          content: s.content,
+          keyPoints: detail.keyPoints || [],
+          actionItems: detail.actionItems || []
+        };
+      });
+
+      const merged = {
+        frameworkTitle,
+        executiveSummary,
+        sections: mergedSections,
+        strategicRecommendations: part3.strategicRecommendations || [],
+        kpiSuggestions: part3.kpiSuggestions || [],
+        sources: part3.sources || []
+      };
+
+      setResult(merged);
+      setPhase(null);
+      setStep('results');
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'Tekrar deneyin.');
+      setPhase(null);
+      setStep('error');
+    }
+  };
+
+  const reset = () => {
+    setStep('hero');
+    setSector(''); setTopic(''); setFramework(''); setResult(null);
+  };
+
+  const showNav = step !== 'loading';
+
+  return (
+    <>
+      {showNav && <Navbar onHome={reset} onMethodology={() => setStep('metodoloji')} />}
+      {step === 'hero' && <Hero onStart={() => setStep('params')} onMethodology={() => setStep('metodoloji')} />}
+      {step === 'metodoloji' && window.MethodologyScreen && (
+        <window.MethodologyScreen
+          frameworks={FRAMEWORKS}
+          onBack={reset}
+          onStart={() => setStep('params')}
+        />
+      )}
+      {step === 'params' && (
+        <ParamForm
+          sector={sector} setSector={setSector}
+          topic={topic} setTopic={setTopic}
+          framework={framework} setFramework={setFramework}
+          onGenerate={generate}
+          onBack={reset}
+        />
+      )}
+      {step === 'loading' && <LoadingScreen phase={phase} />}
+      {step === 'results' && result && fwObj && (
+        <ResultsScreen
+          data={result}
+          framework={fwObj}
+          sector={sector}
+          topic={topic}
+          onRestart={reset}
+        />
+      )}
+      {step === 'error' && (
+        <ErrorScreen
+          msg={errorMsg}
+          onRetry={generate}
+          onBack={() => setStep('params')}
+        />
+      )}
+      {showNav && <Footer />}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
