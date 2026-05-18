@@ -631,6 +631,107 @@ function LoadingScreen({ phase }) {
 }
 
 /* =========================================================
+   PDF EXPORT — Tarayıcıda print-to-PDF ile profesyonel çıktı
+   ========================================================= */
+function exportPDF(data, framework, sector, topic) {
+  const sections = data.sections || [];
+  const recs = data.strategicRecommendations || [];
+  const kpis = data.kpiSuggestions || [];
+  const sources = data.sources || [];
+
+  const sectionsHTML = sections.map((s, i) => `
+    <div style="page-break-inside:avoid;margin-bottom:28px;padding:20px 24px;border-left:3px solid ${framework.color};background:#fafbfc;">
+      <h3 style="font-size:16px;margin:0 0 8px;color:#1a1a2e;">${String(i+1).padStart(2,'0')}. ${s.title || ''}</h3>
+      <p style="font-size:13px;color:#4a4a63;line-height:1.7;margin:0 0 14px;">${s.content || ''}</p>
+      ${(s.keyPoints && s.keyPoints.length) ? `
+        <div style="margin-top:10px;">
+          <div style="font-size:10px;letter-spacing:2px;color:#8a8aa0;text-transform:uppercase;margin-bottom:6px;">Anahtar Noktalar</div>
+          ${s.keyPoints.map(p => `<div style="font-size:12px;color:#1a1a2e;padding:3px 0;">▸ ${p}</div>`).join('')}
+        </div>
+      ` : ''}
+      ${(s.actionItems && s.actionItems.length) ? `
+        <div style="margin-top:10px;">
+          <div style="font-size:10px;letter-spacing:2px;color:#8a8aa0;text-transform:uppercase;margin-bottom:6px;">Aksiyon Maddeleri</div>
+          ${s.actionItems.map(a => `<div style="font-size:12px;color:#2A9D8F;padding:3px 0;">→ ${a}</div>`).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+
+  const recsHTML = recs.length ? recs.map((r, i) => `
+    <div style="padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:13px;display:flex;gap:12px;">
+      <span style="color:${framework.color};font-weight:600;min-width:24px;">${String(i+1).padStart(2,'0')}</span>
+      <span style="color:#1a1a2e;">${r}</span>
+    </div>
+  `).join('') : '<p style="color:#8a8aa0;font-style:italic;">Veri mevcut değil.</p>';
+
+  const kpisHTML = kpis.length ? kpis.map((k, i) => `
+    <div style="padding:8px 0;border-bottom:1px solid #e6e8ee;font-size:13px;display:flex;gap:12px;">
+      <span style="color:#2A9D8F;font-weight:600;min-width:50px;font-size:11px;">KPI ${String(i+1).padStart(2,'0')}</span>
+      <span style="color:#1a1a2e;">${k}</span>
+    </div>
+  `).join('') : '<p style="color:#8a8aa0;font-style:italic;">Veri mevcut değil.</p>';
+
+  const sourcesHTML = sources.length ? sources.map(s => `
+    <span style="display:inline-block;padding:6px 14px;background:#f2f4f7;border-radius:2px;font-size:11px;color:#4a4a63;margin:0 6px 6px 0;">${s}</span>
+  `).join('') : '<p style="color:#8a8aa0;font-style:italic;">Veri mevcut değil.</p>';
+
+  const now = new Date().toLocaleDateString('tr-TR', { year:'numeric', month:'long', day:'numeric' });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Stratejion — ${data.frameworkTitle || ''}</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:'DM Sans',sans-serif; color:#1a1a2e; line-height:1.6; padding:48px; max-width:900px; margin:0 auto; }
+      h1,h2,h3 { font-family:'Playfair Display',serif; }
+      @media print { body { padding:24px; } .no-print { display:none; } }
+    </style>
+  </head><body>
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1a1a2e;padding-bottom:16px;margin-bottom:36px;">
+      <div style="font-size:14px;letter-spacing:0.28em;font-weight:300;text-transform:uppercase;">STRATEJION</div>
+      <div style="font-size:11px;color:#8a8aa0;">${now}</div>
+    </div>
+
+    <div style="background:#1a1a2e;color:white;padding:36px 40px;margin-bottom:32px;">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;">${framework.name} · ${sector}</div>
+      <h1 style="font-size:32px;color:white;margin-bottom:16px;line-height:1.2;">${data.frameworkTitle || ''}</h1>
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;">Executive Summary</div>
+      <p style="font-size:14px;color:rgba(255,255,255,0.9);line-height:1.7;font-style:italic;">${data.executiveSummary || ''}</p>
+    </div>
+
+    <h2 style="font-size:20px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #e6e8ee;">Analiz Bölümleri</h2>
+    ${sectionsHTML}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:36px 0;page-break-inside:avoid;">
+      <div>
+        <h2 style="font-size:18px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">Stratejik Öneriler</h2>
+        ${recsHTML}
+      </div>
+      <div>
+        <h2 style="font-size:18px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">Önerilen KPI'lar</h2>
+        ${kpisHTML}
+      </div>
+    </div>
+
+    <div style="margin-top:24px;page-break-inside:avoid;">
+      <h2 style="font-size:16px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">Referanslar & Kaynaklar</h2>
+      <div>${sourcesHTML}</div>
+    </div>
+
+    <div style="margin-top:48px;padding-top:16px;border-top:1px solid #e6e8ee;display:flex;justify-content:space-between;font-size:10px;color:#8a8aa0;letter-spacing:0.2em;">
+      <span>STRATEJION © 2026</span>
+      <span>McKinsey · BCG · HBR · Porter metodolojileri referans alınmaktadır</span>
+    </div>
+  </body></html>`;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  setTimeout(() => { printWindow.print(); }, 500);
+}
+
+/* =========================================================
    STEP 4 — Results
    ========================================================= */
 function ResultsScreen({ data, framework, sector, topic, onRestart }) {
@@ -644,9 +745,19 @@ function ResultsScreen({ data, framework, sector, topic, onRestart }) {
           background: 'none', border: 'none', color: 'var(--ink-soft)',
           fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', padding: 0
         }}>← Yeni Analiz</button>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--teal)' }}></span>
-          Analiz tamamlandı
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <button onClick={() => exportPDF(data, framework, sector, topic)} style={{
+            background: 'var(--teal)', color: '#fff', border: 'none',
+            padding: '10px 24px', borderRadius: 2,
+            fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8
+          }}>
+            <span style={{ fontSize: 16 }}>↓</span> PDF İndir
+          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--teal)' }}></span>
+            Analiz tamamlandı
+          </div>
         </div>
       </div>
 
@@ -947,7 +1058,7 @@ function ErrorScreen({ onRetry, onBack, msg }) {
 
 /* =========================================================
    PROMPT BUILDERS — Adaptive multi-phase system
-   Token limiti (1024) nedeniyle her çağrı küçük tutulur.
+   Haiku modeli ile hızlı, tutarlı yanıtlar.
    Çerçeveye göre 3-5 phase kullanılır.
    ========================================================= */
 
@@ -957,22 +1068,30 @@ const SECTION_COUNTS = {
 };
 
 function baseSysMsg(sector, topic, fw) {
-  return `Sen deneyimli bir strateji danışmanısın. McKinsey, BCG, Bain metodolojilerini ve HBR literatürünü biliyorsun.
-SEKTÖR: ${sector} | KONU: ${topic} | ÇERÇEVE: ${fw.name}
+  return `Sen 20+ yıl deneyimli, Tier-1 danışmanlık firmasında (McKinsey, BCG, Bain) çalışmış kıdemli bir strateji danışmanısın. Yanıtların sektör jargonunu doğru kullanmalı, somut veriler ve örneklerle desteklenmeli, jenerik/klişe ifadelerden kaçınmalı.
+
+SEKTÖR: ${sector}
+KONU/PROBLEM: ${topic}
+ÇERÇEVE: ${fw.name}
 ÇERÇEVE TALİMATI: ${fw.extra}
-KURAL: SADECE JSON döndür. Markdown, backtick, açıklama YAZMA. Metinler Türkçe olsun.`;
+
+KRİTİK KURALLAR:
+1. SADECE geçerli JSON döndür — markdown, backtick, açıklama metni YAZMA
+2. Tüm metinler profesyonel Türkçe olsun
+3. Sektöre özel terminoloji, metrik ve örnekler kullan — genel/jenerik ifadelerden kaçın
+4. Her analiz cümlesi somut bir insight veya öneri içermeli`;
 }
 
 /* Phase 1A: Başlık, özet ve ilk N section */
 function buildPhase1A(sector, topic, fw, count) {
   return `${baseSysMsg(sector, topic, fw)}
 
-GÖREV: Çerçevenin ilk ${count} bileşeni için analiz üret.
+GÖREV: "${fw.name}" çerçevesinin ilk ${count} bileşeni için ${sector} sektörüne özelleştirilmiş stratejik analiz üret.
 
-JSON formatı:
-{"frameworkTitle":"${fw.name} — ${sector}","executiveSummary":"2-3 cümle özet","sections":[{"title":"Bölüm başlığı","content":"3-4 cümle sektöre özel analiz"}]}
+JSON formatı (TAM BU YAPIYI KULLAN):
+{"frameworkTitle":"${fw.name} — ${sector}","executiveSummary":"Yönetici özeti: konu nedir, neden önemlidir, ana bulguların özeti (3 cümle)","sections":[{"title":"Bölüm başlığı","content":"Detaylı analiz: sektör bağlamı, mevcut durum değerlendirmesi, somut örnekler ve verilerle desteklenmiş 4-5 cümlelik profesyonel analiz"}]}
 
-sections dizisinde TAM ${count} bölüm olsun. Her content en az 3 cümle.`;
+sections dizisinde TAM ${count} bölüm olsun.`;
 }
 
 /* Phase 1B: Kalan section'lar (sadece 5+ bölümlü çerçeveler için) */
@@ -980,45 +1099,46 @@ function buildPhase1B(sector, topic, fw, existingTitles, remainingCount) {
   const list = existingTitles.map((t,i) => `${i+1}. ${t}`).join(', ');
   return `${baseSysMsg(sector, topic, fw)}
 
-Zaten üretilen bölümler: ${list}
+Zaten analiz edilen bileşenler: ${list}
 
-GÖREV: Çerçevenin KALAN ${remainingCount} bileşeni için analiz üret. Yukarıdakileri TEKRARLAMA.
+GÖREV: Çerçevenin KALAN ${remainingCount} bileşeni için analiz üret. Yukarıdaki bileşenleri TEKRARLAMA, yeni bileşenlere odaklan.
 
 JSON formatı:
-{"sections":[{"title":"Bölüm başlığı","content":"3-4 cümle sektöre özel analiz"}]}
+{"sections":[{"title":"Bölüm başlığı","content":"4-5 cümle sektöre özel profesyonel analiz"}]}
 
 sections dizisinde TAM ${remainingCount} bölüm olsun.`;
 }
 
-/* Phase 2A: Her section için keyPoints + actionItems (max 4 section per call) */
+/* Phase 2A: Her section için keyPoints + actionItems */
 function buildPhase2A(sector, topic, fw, titles) {
   const list = titles.map((t,i) => `${i+1}. ${t}`).join('\n');
   return `${baseSysMsg(sector, topic, fw)}
 
-BÖLÜMLER:
+ANALİZ EDİLEN BÖLÜMLER:
 ${list}
 
-GÖREV: Her bölüm için anahtar noktalar ve aksiyon önerileri üret.
+GÖREV: Her bölüm için uygulanabilir anahtar noktalar ve aksiyon maddeleri üret. Jenerik olmayan, ${sector} sektörüne özel, ölçülebilir ve zamanlı maddeler olsun.
 
 JSON formatı:
-{"sectionDetails":[{"title":"Bölüm başlığı AYNEN","keyPoints":["Nokta 1","Nokta 2","Nokta 3"],"actionItems":["Aksiyon 1","Aksiyon 2"]}]}
+{"sectionDetails":[{"title":"Bölüm başlığının BİREBİR AYNISI","keyPoints":["Somut sektörel insight 1","Somut sektörel insight 2","Somut sektörel insight 3"],"actionItems":["Fiille başlayan somut aksiyon 1","Fiille başlayan somut aksiyon 2"]}]}
 
-sectionDetails dizisinde TAM ${titles.length} kayıt olsun. title alanları yukarıdakilerle BİREBİR aynı olsun.`;
+sectionDetails dizisinde TAM ${titles.length} kayıt olsun.`;
 }
 
-/* Phase 3: Stratejik öneriler, KPI'lar ve kaynaklar */
+/* Phase 3: Stratejik öneriler, KPI'lar ve kaynaklar — AYRI ve ROBUST */
 function buildPhase3(sector, topic, fw) {
   return `${baseSysMsg(sector, topic, fw)}
 
-GÖREV: Bu çerçeve analizi için stratejik öneriler, KPI önerileri ve referans kaynakları üret.
+GÖREV: ${sector} sektöründe "${topic}" konusu için ${fw.name} çerçevesi temelinde stratejik öneriler, KPI metrikleri ve akademik/profesyonel kaynaklar üret.
 
-JSON formatı:
-{"strategicRecommendations":["Öneri 1","Öneri 2","Öneri 3","Öneri 4"],"kpiSuggestions":["KPI 1","KPI 2","KPI 3","KPI 4","KPI 5","KPI 6"],"sources":["Kaynak 1","Kaynak 2","Kaynak 3","Kaynak 4"]}
+SADECE AŞAĞIDAKİ JSON YAPISINI DÖNDÜR:
+{"strategicRecommendations":["1. Öneri: açıklama","2. Öneri: açıklama","3. Öneri: açıklama","4. Öneri: açıklama"],"kpiSuggestions":["KPI adı (birim: %, sayı, gün vb.)","KPI adı (birim)","KPI adı (birim)","KPI adı (birim)","KPI adı (birim)","KPI adı (birim)"],"sources":["Yazar/Kurum — Makale/Kitap adı (yıl)","Yazar/Kurum — Makale/Kitap adı (yıl)","Yazar/Kurum — Makale/Kitap adı (yıl)","Yazar/Kurum — Makale/Kitap adı (yıl)"]}
 
-KURALLAR:
-- strategicRecommendations: 4 somut, uygulanabilir öneri
-- kpiSuggestions: 6 ölçülebilir KPI, birimi belirt
-- sources: 4 referans (yazar/kurum/makale)`;
+ZORUNLU:
+- strategicRecommendations: TAM 4 madde, her biri numaralı ve somut
+- kpiSuggestions: TAM 6 madde, her birinde ölçüm birimi parantez içinde belirtilmeli
+- sources: TAM 4 madde, gerçek strateji literatüründen referanslar
+- JSON dışında HİÇBİR ŞEY yazma`;
 }
 
 /* Auto-repair truncated JSON by closing dangling brackets/quotes.
@@ -1183,11 +1303,23 @@ function App() {
         if (part2a.sectionDetails) allDetails = part2a.sectionDetails;
       }
 
-      // ---- Phase 3: Stratejik öneriler + KPI'lar + Kaynaklar ----
+      // ---- Phase 3: Stratejik öneriler + KPI'lar + Kaynaklar (retry ile) ----
       currentPhase++;
       setPhase(`${currentPhase}/${totalPhases}`);
-      const text3 = await callClaude(buildPhase3(sector, topic, fwObj));
-      const part3 = extractJson(text3);
+      let part3 = { strategicRecommendations: [], kpiSuggestions: [], sources: [] };
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const text3 = await callClaude(buildPhase3(sector, topic, fwObj));
+          const parsed3 = extractJson(text3);
+          if (parsed3.strategicRecommendations && parsed3.strategicRecommendations.length > 0) {
+            part3 = parsed3;
+            break;
+          }
+        } catch (e) {
+          console.warn('Phase 3 attempt ' + (attempt+1) + ' failed:', e.message);
+          if (attempt === 1) console.error('Phase 3 tüm denemelerde başarısız');
+        }
+      }
 
       // ---- MERGE ----
       const detailsByTitle = {};
