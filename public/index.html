@@ -640,88 +640,126 @@ function exportPDF(data, framework, sector, topic) {
   const sources = data.sources || [];
 
   const sectionsHTML = sections.map((s, i) => `
-    <div style="page-break-inside:avoid;margin-bottom:28px;padding:20px 24px;border-left:3px solid ${framework.color};background:#fafbfc;">
-      <h3 style="font-size:16px;margin:0 0 8px;color:#1a1a2e;">${String(i+1).padStart(2,'0')}. ${s.title || ''}</h3>
-      <p style="font-size:13px;color:#4a4a63;line-height:1.7;margin:0 0 14px;">${s.content || ''}</p>
+    <div style="page-break-inside:avoid;margin-bottom:24px;padding:22px 28px;border-left:3px solid ${framework.color};background:#f8f9fb;">
+      <h3 style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;margin:0 0 10px;color:#1a1a2e;letter-spacing:-0.01em;">
+        <span class="mono" style="font-size:11px;color:#8a8aa0;margin-right:8px;font-weight:400;">${String(i+1).padStart(2,'0')}</span>
+        ${s.title || ''}
+      </h3>
+      <p style="font-family:'DM Sans',sans-serif;font-size:12.5px;color:#4a4a63;line-height:1.75;margin:0 0 14px;">${s.content || ''}</p>
       ${(s.keyPoints && s.keyPoints.length) ? `
-        <div style="margin-top:10px;">
-          <div style="font-size:10px;letter-spacing:2px;color:#8a8aa0;text-transform:uppercase;margin-bottom:6px;">Anahtar Noktalar</div>
-          ${s.keyPoints.map(p => `<div style="font-size:12px;color:#1a1a2e;padding:3px 0;">▸ ${p}</div>`).join('')}
+        <div style="margin-top:12px;">
+          <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.2em;color:#8a8aa0;text-transform:uppercase;margin-bottom:8px;font-weight:500;">Anahtar Noktalar</div>
+          ${s.keyPoints.map(p => `<div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#1a1a2e;padding:4px 0;line-height:1.6;"><span style="color:${framework.color};margin-right:6px;">▸</span>${p}</div>`).join('')}
         </div>
       ` : ''}
       ${(s.actionItems && s.actionItems.length) ? `
-        <div style="margin-top:10px;">
-          <div style="font-size:10px;letter-spacing:2px;color:#8a8aa0;text-transform:uppercase;margin-bottom:6px;">Aksiyon Maddeleri</div>
-          ${s.actionItems.map(a => `<div style="font-size:12px;color:#2A9D8F;padding:3px 0;">→ ${a}</div>`).join('')}
+        <div style="margin-top:12px;">
+          <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.2em;color:#8a8aa0;text-transform:uppercase;margin-bottom:8px;font-weight:500;">Aksiyon Maddeleri</div>
+          ${s.actionItems.map(a => `<div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#2A9D8F;padding:4px 0;line-height:1.6;"><span style="margin-right:6px;">→</span>${a}</div>`).join('')}
         </div>
       ` : ''}
     </div>
   `).join('');
 
   const recsHTML = recs.length ? recs.map((r, i) => `
-    <div style="padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:13px;display:flex;gap:12px;">
-      <span style="color:${framework.color};font-weight:600;min-width:24px;">${String(i+1).padStart(2,'0')}</span>
+    <div style="padding:10px 0;border-bottom:1px solid #eef0f4;font-family:'DM Sans',sans-serif;font-size:12.5px;display:flex;gap:12px;line-height:1.6;">
+      <span class="mono" style="color:${framework.color};font-weight:600;min-width:24px;font-size:11px;">${String(i+1).padStart(2,'0')}</span>
       <span style="color:#1a1a2e;">${r}</span>
     </div>
-  `).join('') : '<p style="color:#8a8aa0;font-style:italic;">Veri mevcut değil.</p>';
+  `).join('') : '<p style="font-family:DM Sans,sans-serif;color:#8a8aa0;font-style:italic;font-size:12px;">Veri mevcut değil.</p>';
 
   const kpisHTML = kpis.length ? kpis.map((k, i) => `
-    <div style="padding:8px 0;border-bottom:1px solid #e6e8ee;font-size:13px;display:flex;gap:12px;">
-      <span style="color:#2A9D8F;font-weight:600;min-width:50px;font-size:11px;">KPI ${String(i+1).padStart(2,'0')}</span>
+    <div style="padding:8px 0;border-bottom:1px solid #eef0f4;font-family:'DM Sans',sans-serif;font-size:12.5px;display:flex;gap:12px;line-height:1.6;">
+      <span class="mono" style="color:#2A9D8F;font-weight:500;min-width:50px;font-size:10px;">KPI ${String(i+1).padStart(2,'0')}</span>
       <span style="color:#1a1a2e;">${k}</span>
     </div>
-  `).join('') : '<p style="color:#8a8aa0;font-style:italic;">Veri mevcut değil.</p>';
+  `).join('') : '<p style="font-family:DM Sans,sans-serif;color:#8a8aa0;font-style:italic;font-size:12px;">Veri mevcut değil.</p>';
 
   const sourcesHTML = sources.length ? sources.map(s => `
-    <span style="display:inline-block;padding:6px 14px;background:#f2f4f7;border-radius:2px;font-size:11px;color:#4a4a63;margin:0 6px 6px 0;">${s}</span>
-  `).join('') : '<p style="color:#8a8aa0;font-style:italic;">Veri mevcut değil.</p>';
+    <span style="display:inline-block;padding:6px 14px;background:#f2f4f7;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#4a4a63;margin:0 6px 6px 0;letter-spacing:0.02em;">${s}</span>
+  `).join('') : '<p style="font-family:DM Sans,sans-serif;color:#8a8aa0;font-style:italic;font-size:12px;">Veri mevcut değil.</p>';
 
   const now = new Date().toLocaleDateString('tr-TR', { year:'numeric', month:'long', day:'numeric' });
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
     <title>Stratejion — ${data.frameworkTitle || ''}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
       * { box-sizing:border-box; margin:0; padding:0; }
-      body { font-family:'DM Sans',sans-serif; color:#1a1a2e; line-height:1.6; padding:48px; max-width:900px; margin:0 auto; }
-      h1,h2,h3 { font-family:'Playfair Display',serif; }
-      @media print { body { padding:24px; } .no-print { display:none; } }
+      body { font-family:'DM Sans',system-ui,-apple-system,sans-serif; color:#1a1a2e; line-height:1.65; padding:56px 64px; max-width:920px; margin:0 auto; -webkit-font-smoothing:antialiased; }
+      h1 { font-family:'Playfair Display',Georgia,serif; font-weight:600; letter-spacing:-0.02em; }
+      h2 { font-family:'Playfair Display',Georgia,serif; font-weight:500; letter-spacing:-0.01em; }
+      h3 { font-family:'DM Sans',sans-serif; font-weight:600; }
+      .mono { font-family:'JetBrains Mono',monospace; }
+      @media print {
+        body { padding:36px 48px; font-size:11pt; }
+        .no-print { display:none; }
+        .page-break { page-break-before:always; }
+      }
+      @page { margin:1.5cm 2cm; size:A4; }
     </style>
   </head><body>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1a1a2e;padding-bottom:16px;margin-bottom:36px;">
-      <div style="font-size:14px;letter-spacing:0.28em;font-weight:300;text-transform:uppercase;">STRATEJION</div>
-      <div style="font-size:11px;color:#8a8aa0;">${now}</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1a1a2e;padding-bottom:14px;margin-bottom:40px;">
+      <div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:0.3em;font-weight:300;text-transform:uppercase;color:#1a1a2e;">STRATEJION</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#8a8aa0;letter-spacing:0.1em;margin-top:2px;">Strateji Danışmanlık Platformu</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="mono" style="font-size:10px;color:#8a8aa0;letter-spacing:0.05em;">${now}</div>
+        <div class="mono" style="font-size:9px;color:#b0b0c0;margin-top:2px;">Rapor ID: ${Math.random().toString(36).substr(2, 8).toUpperCase()}</div>
+      </div>
     </div>
 
-    <div style="background:#1a1a2e;color:white;padding:36px 40px;margin-bottom:32px;">
-      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;">${framework.name} · ${sector}</div>
-      <h1 style="font-size:32px;color:white;margin-bottom:16px;line-height:1.2;">${data.frameworkTitle || ''}</h1>
-      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;">Executive Summary</div>
-      <p style="font-size:14px;color:rgba(255,255,255,0.9);line-height:1.7;font-style:italic;">${data.executiveSummary || ''}</p>
+    <div style="background:#1a1a2e;color:white;padding:40px 44px;margin-bottom:36px;border-radius:2px;">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+        <span style="padding:4px 12px;background:${framework.color};color:white;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;font-family:'DM Sans',sans-serif;font-weight:500;">${framework.name}</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;font-family:'DM Sans',sans-serif;">${sector}</span>
+      </div>
+      <h1 style="font-size:28px;color:white;margin-bottom:20px;line-height:1.25;">${data.frameworkTitle || ''}</h1>
+      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:8px;font-family:'DM Sans',sans-serif;">Yönetici Özeti</div>
+      <p style="font-size:13px;color:rgba(255,255,255,0.9);line-height:1.75;font-family:'Playfair Display',serif;font-style:italic;">${data.executiveSummary || ''}</p>
     </div>
 
-    <h2 style="font-size:20px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #e6e8ee;">Analiz Bölümleri</h2>
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #e6e8ee;">
+        <span class="mono" style="font-size:10px;color:${framework.color};letter-spacing:0.15em;">01</span>
+        <h2 style="font-size:20px;">Analiz Bölümleri</h2>
+        <span class="mono" style="font-size:11px;color:#8a8aa0;">[${sections.length}]</span>
+      </div>
+    </div>
     ${sectionsHTML}
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:36px 0;page-break-inside:avoid;">
+    <div class="page-break"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;margin:40px 0;page-break-inside:avoid;">
       <div>
-        <h2 style="font-size:18px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">Stratejik Öneriler</h2>
+        <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">
+          <span class="mono" style="font-size:10px;color:${framework.color};letter-spacing:0.15em;">02</span>
+          <h2 style="font-size:18px;">Stratejik Öneriler</h2>
+        </div>
         ${recsHTML}
       </div>
       <div>
-        <h2 style="font-size:18px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">Önerilen KPI'lar</h2>
+        <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">
+          <span class="mono" style="font-size:10px;color:${framework.color};letter-spacing:0.15em;">03</span>
+          <h2 style="font-size:18px;">Önerilen KPI'lar</h2>
+        </div>
         ${kpisHTML}
       </div>
     </div>
 
-    <div style="margin-top:24px;page-break-inside:avoid;">
-      <h2 style="font-size:16px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">Referanslar & Kaynaklar</h2>
+    <div style="margin-top:28px;page-break-inside:avoid;">
+      <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e6e8ee;">
+        <span class="mono" style="font-size:10px;color:${framework.color};letter-spacing:0.15em;">04</span>
+        <h2 style="font-size:16px;">Referanslar & Kaynaklar</h2>
+      </div>
       <div>${sourcesHTML}</div>
     </div>
 
-    <div style="margin-top:48px;padding-top:16px;border-top:1px solid #e6e8ee;display:flex;justify-content:space-between;font-size:10px;color:#8a8aa0;letter-spacing:0.2em;">
-      <span>STRATEJION © 2026</span>
-      <span>McKinsey · BCG · HBR · Porter metodolojileri referans alınmaktadır</span>
+    <div style="margin-top:56px;padding-top:16px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:0.3em;color:#1a1a2e;font-weight:300;">STRATEJION © 2026</div>
+      <div style="font-size:9px;color:#8a8aa0;letter-spacing:0.05em;">McKinsey · BCG · HBR · Porter metodolojileri referans alınmaktadır</div>
     </div>
   </body></html>`;
 
@@ -1281,26 +1319,33 @@ function App() {
       }
 
       // ---- Phase 2A: Her section için keyPoints + actionItems ----
-      // Eğer çok fazla section varsa ikiye böl
+      // Her batch için retry mekanizması
       currentPhase++;
       setPhase(`${currentPhase}/${totalPhases}`);
       const allTitles = allSections.map(s => s.title).filter(Boolean);
       
+      async function fetchDetails(titles) {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const text = await callClaude(buildPhase2A(sector, topic, fwObj, titles));
+            const parsed = extractJson(text);
+            if (parsed.sectionDetails && parsed.sectionDetails.length > 0) return parsed.sectionDetails;
+          } catch (e) {
+            console.warn('Phase 2A attempt ' + (attempt+1) + ' failed for', titles.length, 'sections:', e.message);
+          }
+        }
+        // Fallback: boş detaylar döndür
+        return titles.map(t => ({ title: t, keyPoints: [], actionItems: [] }));
+      }
+
       let allDetails = [];
       if (allTitles.length > 4) {
-        // İlk 4 section için detay
-        const text2a1 = await callClaude(buildPhase2A(sector, topic, fwObj, allTitles.slice(0, 4)));
-        const part2a1 = extractJson(text2a1);
-        if (part2a1.sectionDetails) allDetails = [...part2a1.sectionDetails];
-        
-        // Kalan section'lar için detay (aynı phase içinde)
-        const text2a2 = await callClaude(buildPhase2A(sector, topic, fwObj, allTitles.slice(4)));
-        const part2a2 = extractJson(text2a2);
-        if (part2a2.sectionDetails) allDetails = [...allDetails, ...part2a2.sectionDetails];
+        const d1 = await fetchDetails(allTitles.slice(0, 4));
+        allDetails = [...d1];
+        const d2 = await fetchDetails(allTitles.slice(4));
+        allDetails = [...allDetails, ...d2];
       } else {
-        const text2a = await callClaude(buildPhase2A(sector, topic, fwObj, allTitles));
-        const part2a = extractJson(text2a);
-        if (part2a.sectionDetails) allDetails = part2a.sectionDetails;
+        allDetails = await fetchDetails(allTitles);
       }
 
       // ---- Phase 3: Stratejik öneriler + KPI'lar + Kaynaklar (retry ile) ----
@@ -1321,21 +1366,27 @@ function App() {
         }
       }
 
-      // ---- MERGE ----
+      // ---- MERGE ---- (fuzzy title matching ile)
+      const normalize = (s) => (s || '').trim().toLowerCase().replace(/[^a-zçğıöşü0-9]/gi, '');
       const detailsByTitle = {};
+      const detailsByNorm = {};
       allDetails.forEach(d => {
-        if (d && d.title) detailsByTitle[d.title.trim()] = d;
+        if (d && d.title) {
+          detailsByTitle[d.title.trim()] = d;
+          detailsByNorm[normalize(d.title)] = d;
+        }
       });
 
       const mergedSections = allSections.map((s, i) => {
-        const byTitle = s.title ? detailsByTitle[s.title.trim()] : null;
-        const byIdx = allDetails[i];
-        const detail = byTitle || byIdx || {};
+        const exactMatch = s.title ? detailsByTitle[s.title.trim()] : null;
+        const normMatch = s.title ? detailsByNorm[normalize(s.title)] : null;
+        const idxMatch = allDetails[i];
+        const detail = exactMatch || normMatch || idxMatch || {};
         return {
           title: s.title,
           content: s.content,
-          keyPoints: detail.keyPoints || [],
-          actionItems: detail.actionItems || []
+          keyPoints: (detail.keyPoints && detail.keyPoints.length > 0) ? detail.keyPoints : [],
+          actionItems: (detail.actionItems && detail.actionItems.length > 0) ? detail.actionItems : []
         };
       });
 
