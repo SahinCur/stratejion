@@ -12,6 +12,7 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script type="text/babel" data-presets="env,react" src="diagrams.jsx"></script>
 <script type="text/babel" data-presets="env,react" src="methodology.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="sector-report.jsx"></script>
 <style>
   :root {
     --navy: #1a1a2e;
@@ -224,7 +225,7 @@ const LOADING_MESSAGES = [
 /* =========================================================
    NAVBAR
    ========================================================= */
-function Navbar({ onHome, onMethodology }) {
+function Navbar({ onHome, onMethodology, onSectorReport }) {
   return (
     <nav style={{
       position: 'sticky', top: 0, zIndex: 50,
@@ -244,8 +245,7 @@ function Navbar({ onHome, onMethodology }) {
           {[
             { label: 'Çerçeveler', onClick: onMethodology },
             { label: 'Metodoloji', onClick: onMethodology },
-            { label: 'Yaklaşım', onClick: onMethodology },
-            { label: 'Kütüphane', onClick: onMethodology },
+            { label: 'Sektör Raporu', onClick: onSectorReport },
           ].map(l => (
             <button key={l.label} onClick={l.onClick} style={{
               background: 'none', border: 'none', cursor: 'pointer',
@@ -1163,20 +1163,61 @@ JSON formatı:
 sectionDetails dizisinde TAM ${titles.length} kayıt olsun.`;
 }
 
-/* Phase 3: Stratejik öneriler, KPI'lar ve kaynaklar — AYRI ve ROBUST */
-function buildPhase3(sector, topic, fw) {
+/* Phase 3 — Stratejik öneriler, KPI'lar, kaynaklar — 3 KÜÇÜK PARALEL CALL
+   Her biri kendi başına çalışır; biri başarısız olsa diğerleri yine gelir. */
+function buildPhase3Recs(sector, topic, fw) {
   return `${baseSysMsg(sector, topic, fw)}
 
-GÖREV: ${sector} sektöründe "${topic}" konusu için ${fw.name} çerçevesi temelinde stratejik öneriler, KPI metrikleri ve akademik/profesyonel kaynaklar üret.
+GÖREV: ${sector} sektöründe "${topic}" konusu için 4 adet somut stratejik öneri üret. Her öneri ${fw.name} çerçevesinden çıkan, uygulanabilir, ölçülebilir ve sektöre özel olsun.
 
-SADECE AŞAĞIDAKİ JSON YAPISINI DÖNDÜR:
-{"strategicRecommendations":["1. Öneri: açıklama","2. Öneri: açıklama","3. Öneri: açıklama","4. Öneri: açıklama"],"kpiSuggestions":["KPI adı (birim: %, sayı, gün vb.)","KPI adı (birim)","KPI adı (birim)","KPI adı (birim)","KPI adı (birim)","KPI adı (birim)"],"sources":["Yazar/Kurum — Makale/Kitap adı (yıl)","Yazar/Kurum — Makale/Kitap adı (yıl)","Yazar/Kurum — Makale/Kitap adı (yıl)","Yazar/Kurum — Makale/Kitap adı (yıl)"]}
+SADECE şu JSON'u döndür, başka HİÇBİR ŞEY yazma:
+{"strategicRecommendations":["1. Öneri başlığı: detaylı açıklama","2. Öneri başlığı: detaylı açıklama","3. Öneri başlığı: detaylı açıklama","4. Öneri başlığı: detaylı açıklama"]}`;
+}
 
-ZORUNLU:
-- strategicRecommendations: TAM 4 madde, her biri numaralı ve somut
-- kpiSuggestions: TAM 6 madde, her birinde ölçüm birimi parantez içinde belirtilmeli
-- sources: TAM 4 madde, gerçek strateji literatüründen referanslar
-- JSON dışında HİÇBİR ŞEY yazma`;
+function buildPhase3Kpis(sector, topic, fw) {
+  return `${baseSysMsg(sector, topic, fw)}
+
+GÖREV: ${sector} sektöründe "${topic}" konusunu ölçmek için 6 adet KPI metriği üret. Her KPI ölçülebilir, somut, sektöre özel ve ölçüm birimi parantez içinde belirtilmiş olsun (örn: "Müşteri Kazanım Maliyeti (TL/müşteri)").
+
+SADECE şu JSON'u döndür, başka HİÇBİR ŞEY yazma:
+{"kpiSuggestions":["KPI 1 adı (birim)","KPI 2 adı (birim)","KPI 3 adı (birim)","KPI 4 adı (birim)","KPI 5 adı (birim)","KPI 6 adı (birim)"]}`;
+}
+
+function buildPhase3Sources(sector, topic, fw) {
+  return `${baseSysMsg(sector, topic, fw)}
+
+GÖREV: ${fw.name} çerçevesi ve ${sector} sektörüyle ilgili 4 adet gerçek akademik/profesyonel kaynak referansı üret (McKinsey Quarterly, HBR, Porter, Kaplan-Norton, BCG, Bain, akademik makaleler). Her referans: "Yazar/Kurum — Eser adı (yıl)" formatında.
+
+SADECE şu JSON'u döndür, başka HİÇBİR ŞEY yazma:
+{"sources":["Yazar/Kurum — Eser adı (yıl)","Yazar/Kurum — Eser adı (yıl)","Yazar/Kurum — Eser adı (yıl)","Yazar/Kurum — Eser adı (yıl)"]}`;
+}
+
+/* Statik fallback (her şey başarısız olursa boş kalmasın diye) */
+function defaultRecs(fw, sector) {
+  return [
+    `${fw.name} çerçevesinin temel bileşenleri etrafında bir yol haritası kurun; her bileşen için 90 günlük sahip atayın.`,
+    `${sector} sektörünün önümüzdeki 12 ay görünümüne göre kaynak tahsisini yeniden önceliklendirin.`,
+    `Mevcut performansı çerçevenin kritik metrikleriyle karşılaştırmak için temel ölçüm seti oluşturun.`,
+    `Çeyreklik strateji incelemesi ritmi kurarak çerçeve uygulamasını canlı tutun.`
+  ];
+}
+function defaultKpis(fw, sector) {
+  return [
+    'Stratejik inisiyatif tamamlanma oranı (%)',
+    'Hedef vs. gerçekleşme sapması (%)',
+    'Pazar payı değişimi (yüzde puan)',
+    'Çalışan stratejik hedef farkındalığı (%)',
+    'Strateji incelemesi katılım oranı (%)',
+    'Net Promoter Score (NPS)'
+  ];
+}
+function defaultSources(fw) {
+  return [
+    'Michael E. Porter — Competitive Strategy (1980)',
+    'Kaplan & Norton — The Balanced Scorecard (1996)',
+    'McKinsey Quarterly — Strategy in a digital age (2023)',
+    `Harvard Business Review — ${fw.name} uygulama rehberi`
+  ];
 }
 
 /* Auto-repair truncated JSON by closing dangling brackets/quotes.
@@ -1348,23 +1389,38 @@ function App() {
         allDetails = await fetchDetails(allTitles);
       }
 
-      // ---- Phase 3: Stratejik öneriler + KPI'lar + Kaynaklar (retry ile) ----
+      // ---- Phase 3: Öneriler + KPI'lar + Kaynaklar — 3 paralel mini call
+      // Her biri ayrı; biri patlasa diğerleri yine gelir. Hepsi patlarsa default.
       currentPhase++;
       setPhase(`${currentPhase}/${totalPhases}`);
-      let part3 = { strategicRecommendations: [], kpiSuggestions: [], sources: [] };
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          const text3 = await callClaude(buildPhase3(sector, topic, fwObj));
-          const parsed3 = extractJson(text3);
-          if (parsed3.strategicRecommendations && parsed3.strategicRecommendations.length > 0) {
-            part3 = parsed3;
-            break;
+
+      async function fetchField(promptFn, fieldKey, retries) {
+        const max = retries || 3;
+        for (let attempt = 0; attempt < max; attempt++) {
+          try {
+            const text = await callClaude(promptFn(sector, topic, fwObj));
+            const parsed = extractJson(text);
+            if (parsed[fieldKey] && Array.isArray(parsed[fieldKey]) && parsed[fieldKey].length > 0) {
+              return parsed[fieldKey];
+            }
+          } catch (e) {
+            console.warn(fieldKey + ' attempt ' + (attempt+1) + ' failed:', e.message);
           }
-        } catch (e) {
-          console.warn('Phase 3 attempt ' + (attempt+1) + ' failed:', e.message);
-          if (attempt === 1) console.error('Phase 3 tüm denemelerde başarısız');
         }
+        return null;
       }
+
+      const phase3Results = await Promise.all([
+        fetchField(buildPhase3Recs, 'strategicRecommendations'),
+        fetchField(buildPhase3Kpis, 'kpiSuggestions'),
+        fetchField(buildPhase3Sources, 'sources'),
+      ]);
+
+      const part3 = {
+        strategicRecommendations: phase3Results[0] || defaultRecs(fwObj, sector),
+        kpiSuggestions: phase3Results[1] || defaultKpis(fwObj, sector),
+        sources: phase3Results[2] || defaultSources(fwObj),
+      };
 
       // ---- MERGE ---- (fuzzy title matching ile)
       const normalize = (s) => (s || '').trim().toLowerCase().replace(/[^a-zçğıöşü0-9]/gi, '');
@@ -1419,7 +1475,7 @@ function App() {
 
   return (
     <>
-      {showNav && <Navbar onHome={reset} onMethodology={() => setStep('metodoloji')} />}
+      {showNav && <Navbar onHome={reset} onMethodology={() => setStep('metodoloji')} onSectorReport={() => setStep('sektor')} />}
       {step === 'hero' && <Hero onStart={() => setStep('params')} onMethodology={() => setStep('metodoloji')} />}
       {step === 'metodoloji' && window.MethodologyScreen && (
         <window.MethodologyScreen
@@ -1427,6 +1483,9 @@ function App() {
           onBack={reset}
           onStart={() => setStep('params')}
         />
+      )}
+      {step === 'sektor' && window.SectorReportFlow && (
+        <window.SectorReportFlow onExit={reset} />
       )}
       {step === 'params' && (
         <ParamForm
